@@ -78,7 +78,7 @@ WITH_SYSTEMDIR:=""
 # You have to make sure your libs/frameworks supports
 # these architectures! To build an universal ppc-compatible
 # one would add -arch ppc for example.
-OSX_ARCH:=-arch i386 -arch x86_64
+OSX_ARCH:=-arch x86_64
 
 # This will set the build options to create an MacOS .app-bundle.
 # The app-bundle itself will not be created, but the runtime paths
@@ -161,7 +161,7 @@ endif
 #  generated if building universal binaries on OSX)
 ifeq ($(OSTYPE), Darwin)
 CFLAGS := -O2 -fno-strict-aliasing -fomit-frame-pointer \
-		  -Wall -pipe -g
+		  -Wall -pipe -g -I/opt/local/include
 CFLAGS += $(OSX_ARCH)
 else
 CFLAGS := -O2 -fno-strict-aliasing -fomit-frame-pointer \
@@ -189,9 +189,9 @@ endif
 # ----------
 
 # Extra CFLAGS for SDL
-ifeq ($(OSTYPE), Darwin)
-SDLCFLAGS :=
-else # not darwin
+#ifeq ($(OSTYPE), Darwin)
+#SDLCFLAGS :=
+#else # not darwin
 ifeq ($(WITH_SDL2),yes)
 ifeq ($(OSTYPE),Windows)
 SDLCFLAGS := $(shell /custom/bin/sdl2-config --cflags)
@@ -205,7 +205,7 @@ else
 SDLCFLAGS := $(shell sdl-config --cflags)
 endif
 endif # SDL2
-endif # darwin's else
+#endif # darwin's else
 
 # ----------
 
@@ -258,12 +258,12 @@ SDLLDFLAGS := $(shell /custom/bin/sdl2-config --static-libs)
 else # not SDL2
 SDLLDFLAGS := -lSDL
 endif # SDL2
-else ifeq ($(OSTYPE), Darwin)
-ifeq ($(WITH_SDL2),yes)
-SDLLDFLAGS := -framework SDL2 -framework OpenGL -framework Cocoa
-else # not SDL2
-SDLLDFLAGS := -framework SDL -framework OpenGL -framework Cocoa
-endif # SDL2
+#else ifeq ($(OSTYPE), Darwin)
+#ifeq ($(WITH_SDL2),yes)
+#SDLLDFLAGS := -framework SDL2 -framework OpenGL -framework Cocoa
+#else # not SDL2
+#SDLLDFLAGS := -framework SDL -framework OpenGL -framework Cocoa
+#endif # SDL2
 else # not Darwin/Win
 ifeq ($(WITH_SDL2),yes)
 SDLLDFLAGS := $(shell sdl2-config --libs)
@@ -402,7 +402,7 @@ ifeq ($(OSTYPE), Darwin)
 build/client/%.o : %.m
 	@echo "===> CC $<"
 	${Q}mkdir -p $(@D)
-	${Q}$(CC) $(OSX_ARCH) -x objective-c -c $< -o $@
+	${Q}$(CC) $(OSX_ARCH) -I/opt/local/include -x objective-c -c $< -o $@
 endif
 
 ifeq ($(WITH_CDA),yes)
@@ -411,11 +411,11 @@ endif
 
 ifeq ($(WITH_OGG),yes)
 release/quake2 : CFLAGS += -DOGG
-ifeq ($(OSTYPE), Darwin)
-release/quake2 : LDFLAGS += -framework Vorbis -framework Ogg
-else
+#ifeq ($(OSTYPE), Darwin)
+#release/quake2 : LDFLAGS += -framework Vorbis -framework Ogg
+#else
 release/quake2 : LDFLAGS += -lvorbis -lvorbisfile -logg
-endif
+#endif
 endif
 
 ifeq ($(WITH_OPENAL),yes)
@@ -440,11 +440,11 @@ endif
 
 ifeq ($(WITH_RETEXTURING),yes)
 release/quake2 : CFLAGS += -DRETEXTURE
-ifeq ($(OSTYPE), Darwin)
-release/quake2 : LDFLAGS += -framework libjpeg
-else
+#ifeq ($(OSTYPE), Darwin)
+#release/quake2 : LDFLAGS += -framework libjpeg
+#else
 release/quake2 : LDFLAGS += -ljpeg
-endif
+#endif
 endif
 
 ifeq ($(WITH_SDL2),yes)
@@ -453,7 +453,8 @@ endif
  
 ifeq ($(OSTYPE), Darwin)
 ifeq ($(OSX_APP), yes)
-release/quake2 : LDFLAGS += -Xlinker -rpath -Xlinker @loader_path/../Frameworks
+release/quake2 : LDFLAGS += -framework OpenGL -framework Foundation -framework AppKit
+release/quake2 : LDFLAGS += -L/opt/local/lib -Xlinker -rpath -Xlinker @loader_path/../Frameworks
 endif
 endif
  
@@ -705,7 +706,7 @@ CLIENT_OBJS_ += \
 endif
 
 ifeq ($(OSTYPE), Darwin)
-CLIENT_OBJS_ += src/backends/sdl_osx/SDLMain.o
+#CLIENT_OBJS_ += src/backends/sdl_osx/SDLMain.o
 endif
 
 # ----------

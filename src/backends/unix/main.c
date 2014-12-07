@@ -35,7 +35,7 @@
 #include "header/unix.h"
 
 #if defined(__APPLE__) && !defined(DEDICATED_ONLY)
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 int
