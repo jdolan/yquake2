@@ -11,7 +11,7 @@ II. The main focus is single player, the gameplay and the graphics are
 unchanged, but many bugs were fixed. Unlike most other Quake II ports Yamagi
 Quake II is full 64 bit clean so it works perfectly on modern amd64 (x86_64)
 processors and operating systems. This code should run on Windows XP or later,
-Mac OS X 10.6 or higher (unsupported!) and on most unix-like operating systems
+Mac OS X 10.6 or higher and on most unix-like operating systems
 (only FreeBSD, Linux and OpenBSD are officially supported and tested, for other
 systems you'd at least have to edit the Makefile), just type "make" or "gmake"
 to compile.
@@ -72,10 +72,13 @@ Content of this file:
 
 1. Installation on (Free|Open)BSD and Linux
 ===========================================
-Note: If you're using Debian Linux or a derived distribution like Ubuntu, you
-probably want to use the packages that are linked in the Download section at
-http://www.yamagi.org/quake2/debian.html They'll even assist you in installing
-the game data.
+Note: Some Linux distributions have packages of Yamagi Quake II that might even
+assist you in installing the game data.
+In Debian and Ubuntu it's called "yamagi-quake2", the package
+"game-data-packager" should help you with installing the game data.
+Note however that those packages are usually outdated a few versions, so if you
+encounter any bugs in them it's possible that we have already fixed those bugs
+in a later release.
 
 1.1 Supported Systems:
 ----------------------
@@ -110,8 +113,8 @@ zip file. Now delete the following files and directories:
 - xatrix/gamex86.dll
 - rogue/gamex86.dll
 
-Now put the Quake II CD-ROM into your cd drive and copy the file "pak0.pak"
-and the directory "video/" to the "baseq2/" directory of your installation.
+Now copy the file "pak0.pak" and the directory "video/" from the Quake II
+CD-ROM to the "baseq2/" directory of your installation.
 
 1.3 Demo Version:
 -----------------
@@ -144,11 +147,10 @@ the requirement of most of this depencenies can be removed, but
 it'll lead to the loss of features):
  - A libGL implementation (Mesa3D, nVidia, AMD Catalyst, etc.)
  - OpenGL system headers
- - libjpeg (version 8 or higher)
  - libogg with development headers
  - libvorbis with development headers
  - OpenAL with development headers
- - SDL 1.2 or 2.0 (the later is recommended) with development headers
+ - SDL 1.2 or 2.0 (the latter is recommended) with development headers
    and sdl-config(1)
  - ZLib
 
@@ -280,12 +282,7 @@ Now you are ready to start your brand new Quake II. Have fun.
 =======================
 Yamagi Quake II has full support for Apple OS X. All features are
 supported, including the IPv6 network code and the OpenAL sound backend.
-Installation can be done by using the binary release (this is highly
-recommended) or by compiling the source.
-
-ATTENTION: OS X is currently unsupported. I neither have a Mac nor the time to
-maintain this platform. If you're interested in spending work on OS X please
-write an e-mail to quake2@yamagi.org.
+Installation can be done by using the binary release or by compiling the source.
 
 3.1 Supported Systems
 ---------------------
@@ -337,7 +334,6 @@ The same applies to the "ctf" capture the flag addon.
  
 3.5 Binary Installation
 -----------------------
-We highly recommend, that you use our binary release of Yamagi Quake 2.
 Extract the zip archive and right click on the app. Select "Show Contents",
 a new finder window will open. Navigate to Contents/Resources/baseq2 and
 copy the contents of the baseq2/ folder (created while preparing the game
@@ -352,17 +348,22 @@ compile Yamagi Quake II by yourself follow these steps:
 
 1. Make sure that you've installed XCode with the "Unix Develoment Tools".
    Depending on your OS X version the name of these can be different.
-2. Extract the framework found in stuff/osx-frameworks to /Libraries/
-   Frameworks. It's generally a good idea to use our versions since
-   other builds might be incompatible.
+2. Install dependencies using Homebrew (http://brew.sh). Once you have Homebrew
+   installed, run the following commands from the terminal to install dependencies:
+   brew install sdl2 --universal
+   brew install openal-soft --universal
+   brew install libogg --universal
+   brew install libvorbis --universal
+   
 3. Open a terminal and navigate to the Yamagi Quake II source code. Type
    "make" to compile it. After that the binaries can be found in the release/
    directory.
 
 The binaries can be put into an app-bundle (see 3.5 Binary Installation) or
-used in the classic classic unix way. In the latter case the game be started 
-at the command line. Be aware that the app-bundle support has to be deactivated
-in the Makefile, otherwise the game is unable to find it's libraries!
+used in the classic classic unix way. An empty .App template is included in /stuff/osx.
+In the latter case the game be started at the command line. Be aware that the app-bundle
+support has to be deactivated in the Makefile, otherwise the game is unable to find it's
+libraries!
 
 3.7 Default Configuration
 -------------------------
@@ -504,7 +505,8 @@ the most common questions are answered.
 
 - Yamagi Quake II offers hardware gamma control in realtime in the "Video" menu.
   If Quake II is still too dark, set the "vid_gamma" cvar by hand to values
-  above 1.5.
+  above 1.5. If models and dynamic lights are too dark consider increasing the
+  "gl_modulate" cvar.
 
 - Yamagi Quake II can draw shadows. Just set "gl_shadows" to 1. You most
   likely want to set "gl_stecilshadow" to 1 too. This enables high
@@ -518,11 +520,11 @@ the most common questions are answered.
 
 - Yamagi Quake II has support for the high resolution retexturing pack, created
   by the community. Installation is easy:
-   1. Download q2_textures.zip and/or models.zip from
-        http://www-personal.umich.edu/~jimw/q2/
-   2. Extract one or both files into the "baseq2/" directory of your Quake II
-      installation, so that the new directories "baseq2/textures/" and/or
-      "baseq2/models/" are created.
+   1. Download q2_textures.zip from http://deponie.yamagi.org/quake2/texturepack/
+      (There's also models.zip, but not all contained textures fit on the
+       original Quake II models and thus look broken.)
+   2. Extract the file into the "baseq2/" directory of your Quake II
+      installation, so that the new directories "baseq2/textures/" is created.
    The retexturing pack is used by default if it's installed. It can be switched
    off at any time by setting "gl_retexturing" to "0" and executing
    "vid_restart" aftwards.
@@ -532,7 +534,7 @@ the most common questions are answered.
   followd by a vid_restart. Please note that very old graphic cards may not
   support antialiasing at all.
 
-- It's possible to upscale nearly all 2D artwork. This is especially usefull on
+- It's possible to upscale nearly all 2D artwork. This is especially useful on
   high resolution displays were the cosole and HUD can become very small or even
   unreadable. Scaling support is devided into 3 parts which are controlled by
   cvars:
@@ -570,7 +572,7 @@ There are some cvar to adjust:
 - sensitivity -> The sensistivity of the mouse. Adjust to your needs, via the
   cvar or via the "Options" menu.
 
-- in_filter -> A mouse filter. This was added in one of the countless point
+- m_filter -> A mouse filter. This was added in one of the countless point
   releases but it was broken. We fixed it. The effect is the same as in
   Quake III Arena, instead of using the raw movement signals, two of them are
   combined, filtering vibrations and things like that out.
@@ -802,10 +804,6 @@ What is yq2.cfg for?
  - yq2.cfg is an alternate startup script, used to override some bad
    decisions in the original defaults.cfg. Please do not alter it,
    unless you know what you're doing! It may beak the game!
-
-Why isn't there an "underwater sound effect" when playing under OS X?
- - That's a limitation of OS X. Apples OpenAL implementation doesn't
-   support sound effects.
 
 Why is the FOV different than in id Softwares client?
  - id Softwares client was designed to work an 4:3 screens only. Setting

@@ -30,9 +30,7 @@
 console_t con;
 cvar_t *con_notifytime;
 
-#define MAXCMDLINE 256
-
-extern char key_lines[32][MAXCMDLINE];
+extern char key_lines[NUM_KEY_LINES][MAXCMDLINE];
 extern int edit_line;
 extern int key_linepos;
 
@@ -263,8 +261,9 @@ Con_CheckResize(void)
 {
 	int i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	char tbuf[CON_TEXTSIZE];
+	float scale = SCR_GetConsoleScale();
 
-	width = (viddef.width >> 3) - 2;
+	width = ((int)(viddef.width / scale) >> 3) - 2;
 
 	if (width == con.linewidth)
 	{
@@ -454,12 +453,15 @@ Con_CenteredPrint(char *text)
 	l = strlen(text);
 	l = (con.linewidth - l) / 2;
 
-	if (l < 0)
+	if (l <= 0)
 	{
 		l = 0;
 	}
+	else
+	{
+		memset(buffer, ' ', l);
+	}
 
-	memset(buffer, ' ', l);
 	strcpy(buffer + l, text);
 	strcat(buffer, "\n");
 	Con_Print(buffer);
@@ -609,6 +611,7 @@ Con_DrawConsole(float frac)
 {
 	int i, j, x, y, n;
 	int rows;
+	int verLen;
 	char *text;
 	int row;
 	int lines;
@@ -642,9 +645,11 @@ Con_DrawConsole(float frac)
 
 	Com_sprintf(version, sizeof(version), "Yamagi Quake II v%s", YQ2VERSION);
 
-	for (x = 0; x < 21; x++)
+	verLen = strlen(version);
+
+	for (x = 0; x < verLen; x++)
 	{
-		Draw_CharScaled(viddef.width - (173 * scale) + x * 8 * scale, lines - 35 * scale, 128 + version[x], scale);
+		Draw_CharScaled(viddef.width - ((verLen*8+5) * scale) + x * 8 * scale, lines - 35 * scale, 128 + version[x], scale);
 	}
 
 	t = time(NULL);

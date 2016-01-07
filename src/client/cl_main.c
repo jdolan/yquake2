@@ -26,6 +26,7 @@
  */
 
 #include "header/client.h"
+#include "../backends/generic/header/input.h"
 
 void CL_ForwardToServer_f(void);
 void CL_Changing_f(void);
@@ -299,7 +300,7 @@ CL_Setenv_f(void)
 
 		else
 		{
-			Com_Printf("%s undefined\n", Cmd_Argv(1), env);
+			Com_Printf("%s undefined\n", Cmd_Argv(1));
 		}
 	}
 }
@@ -877,6 +878,8 @@ CL_Init(void)
 
 	VID_Init();
 
+	IN_Init();
+
 	V_Init();
 
 	net_message.data = net_message_buffer;
@@ -896,6 +899,8 @@ CL_Init(void)
 	FS_ExecAutoexec();
 
 	Cbuf_Execute();
+
+	Key_ReadConsoleHistory();
 }
 
 void
@@ -913,6 +918,8 @@ CL_Shutdown(void)
 
 	CL_WriteConfiguration();
 
+	Key_WriteConsoleHistory();
+
 #ifdef CDA
 	CDAudio_Shutdown();
 #endif
@@ -920,6 +927,7 @@ CL_Shutdown(void)
 	OGG_Stop();
 #endif
 	S_Shutdown();
+	IN_Shutdown();
 	VID_Shutdown();
 }
 

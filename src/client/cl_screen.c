@@ -253,6 +253,8 @@ SCR_DrawCenterString(void)
 	int x, y;
 	int remaining;
 	float scale;
+    const int char_unscaled_width  = 8;
+    const int char_unscaled_height = 8;
 
 	/* the finale prints the characters one at a time */
 	remaining = 9999;
@@ -282,10 +284,10 @@ SCR_DrawCenterString(void)
 			}
 		}
 
-		x = ((viddef.width - l * 8) / 2) / scale;
+		x = ((viddef.width / scale) - (l * char_unscaled_width)) / 2;
 		SCR_AddDirtyPoint(x, y);
 
-		for (j = 0; j < l; j++, x += 8)
+		for (j = 0; j < l; j++, x += char_unscaled_width)
 		{
 			Draw_CharScaled(x * scale, y * scale, start[j], scale);
 
@@ -295,9 +297,9 @@ SCR_DrawCenterString(void)
 			}
 		}
 
-		SCR_AddDirtyPoint(x, y + 8);
+		SCR_AddDirtyPoint(x, y + char_unscaled_height);
 
-		y += 8;
+		y += char_unscaled_height;
 
 		while (*start && *start != '\n')
 		{
@@ -432,9 +434,9 @@ SCR_Init(void)
 	scr_graphscale = Cvar_Get("graphscale", "1", 0);
 	scr_graphshift = Cvar_Get("graphshift", "0", 0);
 	scr_drawall = Cvar_Get("scr_drawall", "0", 0);
-	gl_hudscale = Cvar_Get("gl_hudscale", "1", CVAR_ARCHIVE);
-	gl_consolescale = Cvar_Get("gl_consolescale", "1", CVAR_ARCHIVE);
-	gl_menuscale = Cvar_Get("gl_menuscale", "1", CVAR_ARCHIVE);
+	gl_hudscale = Cvar_Get("gl_hudscale", "-1", CVAR_ARCHIVE);
+	gl_consolescale = Cvar_Get("gl_consolescale", "-1", CVAR_ARCHIVE);
+	gl_menuscale = Cvar_Get("gl_menuscale", "-1", CVAR_ARCHIVE);
 
 	/* register our commands */
 	Cmd_AddCommand("timerefresh", SCR_TimeRefresh_f);
@@ -1550,47 +1552,33 @@ SCR_UpdateScreen(void)
 	GLimp_EndFrame();
 }
 
-void
-SCR_DrawCrosshair(void)
+static float
+SCR_ClampScale(float scale)
 {
-	if (!crosshair->value)
+	float f;
+
+	f = viddef.width / 320.0f;
+	if (scale > f)
 	{
-		return;
+		scale = f;
 	}
 
-	if (crosshair->modified)
+	f = viddef.height / 240.0f;
+	if (scale > f)
 	{
-		crosshair->modified = false;
-		SCR_TouchPics();
+		scale = f;
 	}
 
-	if (crosshair_scale->modified)
+	if (scale < 1)
 	{
-		crosshair_scale->modified = false;
-
-		if (crosshair_scale->value > 5)
-		{
-			Cvar_SetValue("crosshair_scale", 5);
-		}
-
-		else if (crosshair_scale->value < 0.25)
-		{
-			Cvar_SetValue("crosshair_scale", 0.25);
-		}
+		scale = 1;
 	}
 
-	if (!crosshair_pic[0])
-	{
-		return;
-	}
-
-	Draw_Pic(scr_vrect.x + ((scr_vrect.width - crosshair_width) >> 1),
-			scr_vrect.y + ((scr_vrect.height - crosshair_height) >> 1),
-			crosshair_pic);
+	return scale;
 }
 
-float
-SCR_GetScale(void)
+static float
+SCR_GetDefaultScale(void)
 {
 	int i = viddef.width / 640;
 	int j = viddef.height / 240;
@@ -1607,18 +1595,61 @@ SCR_GetScale(void)
 	return i;
 }
 
+void
+SCR_DrawCrosshair(void)
+{
+	float scale;
+
+	if (!crosshair->value)
+	{
+		return;
+	}
+
+	if (crosshair->modified)
+	{
+		crosshair->modified = false;
+		SCR_TouchPics();
+	}
+
+	if (!crosshair_pic[0])
+	{
+		return;
+	}
+
+	if (crosshair_scale->value < 0)
+	{
+		scale = SCR_GetDefaultScale();
+	}
+	else
+	{
+		scale = SCR_ClampScale(crosshair_scale->value);
+	}
+
+	Draw_PicScaled(scr_vrect.x + (scr_vrect.width - crosshair_width * scale) / 2,
+			scr_vrect.y + (scr_vrect.height - crosshair_height * scale) / 2,
+			crosshair_pic, scale);
+}
+
 float
 SCR_GetHUDScale(void)
 {
 	float scale;
 
-	if (gl_hudscale->value < 0)
+	if (!scr_initialized)
 	{
-		scale = SCR_GetScale();
+		scale = 1;
+	}
+	else if (gl_hudscale->value < 0)
+	{
+		scale = SCR_GetDefaultScale();
+	}
+	else if (gl_hudscale->value == 0) /* HACK: allow scale 0 to hide the HUD */
+	{
+		scale = 0;
 	}
 	else
 	{
-		scale = gl_hudscale->value;
+		scale = SCR_ClampScale(gl_hudscale->value);
 	}
 
 	return scale;
@@ -1629,13 +1660,17 @@ SCR_GetConsoleScale(void)
 {
 	float scale;
 
-	if (gl_consolescale->value < 0)
+	if (!scr_initialized)
 	{
-		scale = SCR_GetScale();
+		scale = 1;
+	}
+	else if (gl_consolescale->value < 0)
+	{
+		scale = SCR_GetDefaultScale();
 	}
 	else
 	{
-		scale = gl_consolescale->value;
+		scale = SCR_ClampScale(gl_consolescale->value);
 	}
 
 	return scale;
@@ -1646,13 +1681,17 @@ SCR_GetMenuScale(void)
 {
 	float scale;
 
-	if (gl_menuscale->value < 0)
+	if (!scr_initialized)
 	{
-		scale = SCR_GetScale();
+		scale = 1;
+	}
+	else if (gl_menuscale->value < 0)
+	{
+		scale = SCR_GetDefaultScale();
 	}
 	else
 	{
-		scale = gl_menuscale->value;
+		scale = SCR_ClampScale(gl_menuscale->value);
 	}
 
 	return scale;

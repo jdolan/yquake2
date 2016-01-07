@@ -1,4 +1,33 @@
+Quake II 5.31 to 5.32:
+- Fix problems with never openal-soft versions.
+- Fix overbright bits not applied to regular meshes. (by David Reid)
+- Several improvements to GUI / HUD scaling. (by David Reid)
+- Don't stop generating gibs after map change.
+- A new high resolution application / windows icon. (by Ryan)
+- Don't display baseq2 savegames in mods / addons.
+- Some smaller bugfixes.
+
+Quake II 5.30 to 5.31:
+- Enabled hud scaling by default and added an option to the video
+  menu to switch scaling off.
+- Fixed animated textures on transparent surfaces.
+- Added CMake as an optional build system.
+- Implemented a persistent console history. (by caedes)
+- Fix bug with high velocities in vents in 32bit builds.
+- A lot of small fixes and changes. (by Ozkan Sezer)
+
+Quake II 5.24 to 5.30:
+- Support for Mac OS X was overhauled. (by Jarvik7)
+- Overhauled retexturing support, replacing libjpeg with stb_image,
+  adding png support because it was so easy (by caedes).
+- Fix gamma (was broken in last release)
+- Fix mouse grabbing (again!)
+- Add binary directory to game data path
+
 Quake II 5.23 to 5.24:
+- Fix keyboard layouts in the console.
+- Use GL_ARB_texture_non_power_of_two if it's
+  supported by the GPU.
 - Provide gl_consolescale and gl_menuscale cvars to
   change the scale of the console and the menu.
 - Several bugfixes and improvements to the sound system.
@@ -19,7 +48,7 @@ Quake II 5.21 to 5.22:
   cvar.
 
 Quake II 5.20 to 5.21:
-- Fix a bug regaring mouse key handling (reported 
+- Fix a bug regaring mouse key handling (reported
   by phenixia2003)
 - Correct MS Windows builds. Add official support
   for Win64. This still needs some testing.
@@ -63,7 +92,7 @@ Quake II 4.21 to 5.00
   "s_sdldriver".
 
 Quake II 4.20 to 4.21
-- Fix several segfaults with OpenAL. (reported by 
+- Fix several segfaults with OpenAL. (reported by
   Joran and mxmvasilyev0)
 - Add a file CONTRIBUTE.
 - Some minor changes to the Makefile.

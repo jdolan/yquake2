@@ -219,9 +219,7 @@ extern cvar_t *gl_mode;
 extern cvar_t *gl_customwidth;
 extern cvar_t *gl_customheight;
 
-#ifdef RETEXTURE
 extern cvar_t *gl_retexturing;
-#endif
 
 extern cvar_t *gl_lightmap;
 extern cvar_t *gl_shadows;
@@ -324,8 +322,7 @@ void R_ResampleTexture(unsigned *in, int inwidth, int inheight,
 void LoadPCX(char *filename, byte **pic, byte **palette,
 		int *width, int *height);
 image_t *LoadWal(char *name);
-void LoadJPG(char *origname, byte **pic, int *width, int *height);
-void LoadTGA(char *origname, byte **pic, int *width, int *height);
+qboolean LoadSTB(const char *origname, const char* type, byte **pic, int *width, int *height);
 void GetWalInfo(char *name, int *width, int *height);
 void GetPCXInfo(char *filename, int *width, int *height);
 image_t *R_LoadPic(char *name, byte *pic, int width, int realwidth,
@@ -366,6 +363,7 @@ typedef struct
 	qboolean mtexcombine;
 
 	qboolean anisotropic;
+	qboolean tex_npot;
 	float max_anisotropy;
 } glconfig_t;
 
@@ -432,18 +430,8 @@ int GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen);
 void *GLimp_GetProcAddress (const char* proc);
 
 /*
- * Toggle fullscreen.
- */
-void GLimp_ToggleFullscreen(void);
-
-/*
  * (Un)grab Input
  */
 void GLimp_GrabInput(qboolean grab);
-
-/*
- * returns true if input is grabbed, else false
- */
-qboolean GLimp_InputIsGrabbed();
 
 #endif

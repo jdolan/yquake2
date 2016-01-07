@@ -390,14 +390,14 @@ R_CullAliasModel(vec3_t bbox[8], entity_t *e)
 
 	if ((e->frame >= paliashdr->num_frames) || (e->frame < 0))
 	{
-		VID_Printf(PRINT_ALL, "R_CullAliasModel %s: no such frame %d\n",
+		VID_Printf(PRINT_DEVELOPER, "R_CullAliasModel %s: no such frame %d\n",
 				currentmodel->name, e->frame);
 		e->frame = 0;
 	}
 
 	if ((e->oldframe >= paliashdr->num_frames) || (e->oldframe < 0))
 	{
-		VID_Printf(PRINT_ALL, "R_CullAliasModel %s: no such oldframe %d\n",
+		VID_Printf(PRINT_DEVELOPER, "R_CullAliasModel %s: no such oldframe %d\n",
 				currentmodel->name, e->oldframe);
 		e->oldframe = 0;
 	}
@@ -668,6 +668,21 @@ R_DrawAliasModel(entity_t *e)
 		}
 	}
 
+
+    /* Apply gl_overbrightbits to the mesh. If we don't do this they will appear slightly dimmer relative to
+       walls. Also note that gl_overbrightbits is only applied to walls when gl_ext_mtexcombine is set to 1,
+       so we'll also want to check that; otherwise we'll end up in the reverse situation and the meshes will
+       appear too bright. */
+    if (gl_config.mtexcombine && gl_overbrightbits->value)
+    {
+        for (i = 0; i < 3; ++i)
+        {
+            shadelight[i] *= gl_overbrightbits->value;
+        }
+    }
+    
+
+
 	/* ir goggles color override */
 	if (r_newrefdef.rdflags & RDF_IRGOGGLES && currententity->flags &
 		RF_IR_VISIBLE)
@@ -760,7 +775,7 @@ R_DrawAliasModel(entity_t *e)
 	if ((currententity->frame >= paliashdr->num_frames) ||
 		(currententity->frame < 0))
 	{
-		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such frame %d\n",
+		VID_Printf(PRINT_DEVELOPER, "R_DrawAliasModel %s: no such frame %d\n",
 				currentmodel->name, currententity->frame);
 		currententity->frame = 0;
 		currententity->oldframe = 0;
@@ -769,7 +784,7 @@ R_DrawAliasModel(entity_t *e)
 	if ((currententity->oldframe >= paliashdr->num_frames) ||
 		(currententity->oldframe < 0))
 	{
-		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n",
+		VID_Printf(PRINT_DEVELOPER, "R_DrawAliasModel %s: no such oldframe %d\n",
 				currentmodel->name, currententity->oldframe);
 		currententity->frame = 0;
 		currententity->oldframe = 0;

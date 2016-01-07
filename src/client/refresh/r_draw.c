@@ -33,14 +33,16 @@ void Scrap_Upload(void);
 
 extern unsigned r_rawpalette[256];
 
+static cvar_t *gl_nolerp_list;
+
 void
 Draw_InitLocal(void)
 {
-	/* load console characters (don't bilerp characters) */
+	/* don't bilerp characters and crosshairs */
+	gl_nolerp_list = Cvar_Get("gl_nolerp_list", "pics/conchars.pcx pics/ch1.pcx pics/ch2.pcx pics/ch3.pcx", 0);
+
+	/* load console characters */
 	draw_chars = R_FindImage("pics/conchars.pcx", it_pic);
-	R_Bind(draw_chars->texnum);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
 /*

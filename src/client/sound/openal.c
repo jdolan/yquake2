@@ -54,12 +54,7 @@ qboolean streamPlaying;
 static ALuint s_srcnums[MAX_CHANNELS - 1];
 static ALuint streamSource;
 static int s_framecount;
-
-/* Apple crappy OpenAL implementation
-   has no support for filters. */
-#ifndef __APPLE__
 static ALuint underwaterFilter;
-#endif
 
 /* ----------------------------------------------------------------- */
 
@@ -203,24 +198,28 @@ AL_Spatialize(channel_t *ch)
 {
 	vec3_t origin;
 
-	/* anything coming from the view entity
-	   will always be full volume. no
-	   attenuation = no spatialization */
-	if ((ch->entnum == -1) || (ch->entnum == cl.playernum + 1) ||
-		!ch->dist_mult)
+	if ((ch->entnum == -1) || (ch->entnum == cl.playernum + 1) || !ch->dist_mult)
 	{
-		VectorCopy(listener_origin, origin);
+		/* from view entity (player) => nothing to do,
+		 * position is still (0,0,0) and relative,
+		 * as set in AL_PlayChannel() */
+
+		return;
 	}
 	else if (ch->fixed_origin)
 	{
 		VectorCopy(ch->origin, origin);
+		qalSource3f(ch->srcnum, AL_POSITION, AL_UnpackVector(origin));
+		return;
 	}
 	else
 	{
 		CL_GetEntitySoundOrigin(ch->entnum, origin);
+		qalSource3f(ch->srcnum, AL_POSITION, AL_UnpackVector(origin));
+		return;
 	}
 
-	qalSource3f(ch->srcnum, AL_POSITION, AL_UnpackVector(origin));
+
 }
 
 /*
@@ -240,14 +239,14 @@ AL_PlayChannel(channel_t *ch)
 	}
 
 	/* Clamp volume */
-	vol = ch->oal_vol + s_volume->value;
+	vol = ch->oal_vol;
 
 	if (vol > 1.0f)
 	{
 		vol = 1.0f;
 	}
 
-    sc = ch->sfx->cache;
+	sc = ch->sfx->cache;
 	ch->srcnum = s_srcnums[ch - channels];
 
 	qalGetError();
@@ -257,6 +256,20 @@ AL_PlayChannel(channel_t *ch)
 	qalSourcef(ch->srcnum, AL_GAIN, vol);
  	qalSourcei(ch->srcnum, AL_BUFFER, sc->bufnum);
 	qalSourcei(ch->srcnum, AL_LOOPING, ch->autosound ? AL_TRUE : AL_FALSE);
+
+	if ((ch->entnum == -1) || (ch->entnum == cl.playernum + 1) || !ch->dist_mult)
+	{
+		/* anything coming from the view entity will always
+		 * be full volume and at the listeners position */
+		qalSource3f(ch->srcnum, AL_POSITION, 0.0f, 0.0f, 0.0f);
+		qalSourcei(ch->srcnum, AL_SOURCE_RELATIVE, AL_TRUE);
+	}
+	else
+	{
+		/* all other sources are *not* relative */
+		qalSourcei(ch->srcnum, AL_SOURCE_RELATIVE, AL_FALSE);
+	}
+
 
 	/* Spatialize it */
 	AL_Spatialize(ch);
@@ -432,6 +445,11 @@ AL_AddLoopSounds(void)
 		ch->dist_mult = SOUND_LOOPATTENUATE;
 		ch->end = paintedtime + sc->length;
 
+		/* it seems like looped sounds are always played at full volume
+		 * see SDL_AddLoopSounds() which calls SDL_SpatializeOrigin() with volume 255.0f
+		 * so set it to full volume (1.0 * s_volume). */
+		ch->oal_vol = s_volume->value;
+
 		AL_PlayChannel(ch);
 	}
 }
@@ -591,7 +609,6 @@ AL_Update(void)
 	/* set listener (player) parameters */
 	AL_CopyVector(listener_forward, orientation);
 	AL_CopyVector(listener_up, orientation + 3);
- 	qalListenerf(AL_GAIN, s_volume->value);
 	qalListenerf(AL_MAX_GAIN, s_openal_maxgain->value);
 	qalDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 	qalListener3f(AL_POSITION, AL_UnpackVector(listener_origin));
@@ -663,7 +680,6 @@ AL_Update(void)
 void
 AL_Underwater()
 {
-#if !defined (__APPLE__)
 	int i;
 
 	if (sound_started != SS_OAL)
@@ -679,7 +695,6 @@ AL_Underwater()
 	{
 		qalSourcei(s_srcnums[i], AL_DIRECT_FILTER, underwaterFilter);
 	}
-#endif
 }
 
 /*
@@ -688,7 +703,6 @@ AL_Underwater()
 void
 AL_Overwater()
 {
-#if !defined (__APPLE__)
 	int i;
 
 	if (sound_started != SS_OAL)
@@ -704,7 +718,6 @@ AL_Overwater()
 	{
 		qalSourcei(s_srcnums[i], AL_DIRECT_FILTER, 0);
 	}
-#endif
 }
 
 /* ----------------------------------------------------------------- */
@@ -730,7 +743,6 @@ AL_InitStreamSource()
 static void
 AL_InitUnderwaterFilter()
 {
-#if !defined (__APPLE__)
     underwaterFilter = 0;
 
     if (!(qalGenFilters && qalFilteri && qalFilterf && qalDeleteFilters))
@@ -758,7 +770,6 @@ AL_InitUnderwaterFilter()
 
     s_underwater->modified = true;
     s_underwater_gain_hf->modified = true;
-#endif
 }
 
 /*
@@ -819,10 +830,7 @@ AL_Init(void)
 
 	s_numchannels = i;
 	AL_InitStreamSource();
-
-#ifndef __APPLE__
 	AL_InitUnderwaterFilter();
-#endif
 
 	Com_Printf("Number of OpenAL sources: %d\n\n", s_numchannels);
 	return true;
@@ -839,9 +847,8 @@ AL_Shutdown(void)
 	AL_StreamDie();
 
 	qalDeleteSources(1, &streamSource);
-#if !defined (__APPLE__)
 	qalDeleteFilters(1, &underwaterFilter);
-#endif
+
 	if (s_numchannels)
 	{
 		/* delete source names */

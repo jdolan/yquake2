@@ -50,7 +50,6 @@
 #include "ref.h"
 #include "vid.h"
 #include "screen.h"
-#include "input.h"
 #include "keyboard.h"
 #include "console.h"
 
@@ -222,7 +221,7 @@ typedef struct
 									 /* > cls.disable_servercount, clear disable_screen */
 
 	/* connection information */
-	char		servername[MAX_OSPATH]; /* name of server from original connect */
+	char		servername[256]; /* name of server from original connect */
 	float		connect_time; /* for connection retransmits */
 
 	int			quakePort; /* a 16 bit value that allows quake servers */

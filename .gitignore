@@ -2,3 +2,5 @@ baseq2
 /build/
 /release/
 *.mk
+*.user
+*.d
